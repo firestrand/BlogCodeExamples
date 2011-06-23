@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace BlogCodeExamples
@@ -22,6 +24,7 @@ namespace BlogCodeExamples
             }
             return result;
         }
+
         public static string SerializePersonToXmlString(Person person)
         {
             var xmlSerializer = new XmlSerializer(typeof(Person));
@@ -54,6 +57,31 @@ namespace BlogCodeExamples
             }
         }
 
+        public static dynamic DeserializeDynamicPersonFromXmlString(string personXml)
+        {
+            dynamic result = new ExpandoObject();
+
+            var doc = XDocument.Parse(personXml);
+            var nodes = doc.Root.Descendants().Select(node => node);
+            foreach (var node in nodes)
+            {
+                    var person = result as IDictionary<string, object>;
+                    person[node.Name.LocalName] = node.Value.Trim();
+            }
+
+            return result;
+        }
+
+        public static string SerializeDynamicPersonToXmlStringFragment(dynamic person)
+        {
+
+            var doc = new XElement("Person");
+            foreach (var value in person as IDictionary<string, object>)
+            {
+                doc.Add(new XElement(value.Key,value.Value));
+            }
+            return doc.ToString(SaveOptions.DisableFormatting);
+        }
         [XmlRoot( Namespace = "")]
         public class Person
         {
